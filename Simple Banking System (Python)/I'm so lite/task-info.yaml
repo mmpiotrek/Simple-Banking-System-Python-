@@ -286,6 +286,15 @@ files:
       
       if __name__ == '__main__':    BankingSystem('banking.banking').run_tests()
     learner_created: false
+  - name: banking/card.s3db
+    visible: true
+    learner_created: true
+  - name: card.s3db
+    visible: true
+    learner_created: true
 feedback_link: https://hyperskill.org/learn/step/9829#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Wed, 14 Feb 2024 18:10:04 UTC"
 record: -1
