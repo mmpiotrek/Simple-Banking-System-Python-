@@ -8,11 +8,18 @@ class Account:
         self.iin = '00000'
         random.seed(len(other_accounts))
         self.customer_account = "{:09d}".format(random.randint(0, 999_999_999))
-        self.checksum = random.randint(0, 9)
-        self.card_number = ''.join([str(self.mii),
-                                    str(self.iin),
-                                    self.customer_account,
-                                    str(self.checksum)])
+        self.bin = ''.join([str(self.mii),
+                            str(self.iin),
+                            self.customer_account])
+        digits = []
+        for i, digit in enumerate(list(map(int, [*self.bin]))):
+            if i % 2 == 0:
+                digit *= 2
+                if digit > 9:
+                    digit -= 9
+            digits.append(digit)
+        self.checksum = 10 - sum(digits) % 10
+        self.card_number = ''.join([str(self.bin), str(self.checksum)[-1]])
         self.pin = "{:04d}".format(random.randint(0, 9999))
         self.balance = 0
 
@@ -25,6 +32,7 @@ class Account:
             if client_input == '1':
                 print("Balance:", self.balance)
             elif client_input == '2':
+                print("\nYou have successfully logged out!\n")
                 return False
             elif client_input == '0':
                 return True
