@@ -78,7 +78,7 @@ if __name__ == '__main__':
                 print("\nYou have successfully logged in!\n")
                 exit_program = False
 
-                # SUBMENU
+                # SUBMENU for account
                 while True:
                     print("1. Balance")
                     print("2. Log out")
