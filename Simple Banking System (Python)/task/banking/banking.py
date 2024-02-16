@@ -25,6 +25,23 @@ class Account:
         self.balance = 0
 
 
+def luhn_algorithm(card_number):
+    digits = []
+    for i, digit in enumerate(list(map(int, [*card_number[:-1]]))):
+        if i % 2 == 0:
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+        digits.append(digit)
+    checksum = 10 - sum(digits) % 10
+    if checksum == 10:
+        checksum = 0
+    if checksum == int(card_number[-1]):
+        return True
+    else:
+        return False
+
+
 if __name__ == '__main__':
     conn = sqlite3.connect('./card.s3db')
     cur = conn.cursor()
@@ -68,9 +85,11 @@ if __name__ == '__main__':
         elif user_input == '2':
             user_card_number = input("Enter your card number:\n")
             user_pin = input("Enter your PIN:\n")
-            cur.execute('SELECT pin, balance FROM card WHERE number=?', [user_card_number])
+            cur.execute('SELECT pin '
+                        'FROM card '
+                        'WHERE number=?', [user_card_number])
             try:
-                pin, balance = cur.fetchone()
+                pin = cur.fetchone()[0]
             except:
                 print("\nWrong card number or PIN!\n")
                 continue
@@ -81,12 +100,67 @@ if __name__ == '__main__':
                 # SUBMENU for account
                 while True:
                     print("1. Balance")
-                    print("2. Log out")
+                    print("2. Add income")
+                    print("3. Do transfer")
+                    print("4. Close account")
+                    print("5. Log out")
                     print("0. Exit")
                     client_input = input()
+                    cur.execute('SELECT balance '
+                                'FROM card '
+                                'WHERE number=?', [user_card_number])
+                    balance = cur.fetchone()[0]
+
                     if client_input == '1':
                         print("Balance:", balance)
                     elif client_input == '2':
+                        income = int(input("Enter income:"))
+                        request = f"UPDATE card SET balance={income+balance} WHERE number='{user_card_number}' AND pin='{user_pin}'"
+                        conn.execute(request)
+                        conn.commit()
+                        print("Income was added")
+                    elif client_input == '3':
+                        print("Transfer")
+                        transfer_card_number = input("Enter card number:")
+                        luhn_condition = luhn_algorithm(transfer_card_number)
+                        if not luhn_condition:
+                            print("Probably you made a mistake in the card number. Please try again!")
+                            continue
+                        if transfer_card_number == user_card_number:
+                            print("You can't transfer money to the same account!")
+                        try:
+                            cur.execute('SELECT number '
+                                        'FROM card '
+                                        'WHERE number=?', [transfer_card_number])
+                        except:
+                            print("\nSuch a card does not exist.\n")
+                            continue
+                        if cur.fetchone() is None:
+                            print("\nSuch a card does not exist.\n")
+                            continue
+                        transfer_money = int(input("Enter how much money you want to transfer:"))
+                        if transfer_money > balance:
+                            print("Not enough money!")
+                            continue
+                        else:
+                            cur.execute('SELECT balance '
+                                        'FROM card '
+                                        'WHERE number=?', [transfer_card_number])
+                            transfer_balance = cur.fetchone()[0]
+                            request = f"UPDATE card SET balance={balance-transfer_money} WHERE number='{user_card_number}' AND pin='{user_pin}'"
+                            conn.execute(request)
+                            conn.commit()
+                            request = f"UPDATE card SET balance={transfer_balance+transfer_money} WHERE number='{transfer_card_number}'"
+                            conn.execute(request)
+                            conn.commit()
+                            print("Success!")
+                    elif client_input == '4':
+                        request = f"DELETE FROM card WHERE number='{user_card_number}'"
+                        cur.execute(request)
+                        conn.commit()
+                        print("The account has been closed!")
+                        break
+                    elif client_input == '5':
                         print("\nYou have successfully logged out!\n")
                         break
                     elif client_input == '0':
