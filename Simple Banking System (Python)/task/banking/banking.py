@@ -109,7 +109,9 @@ if __name__ == '__main__':
                     cur.execute('SELECT balance '
                                 'FROM card '
                                 'WHERE number=?', [user_card_number])
-                    balance = cur.fetchone()[0]
+                    balance = cur.fetchone()
+                    if balance is not None:
+                        balance = balance[0]
 
                     if client_input == '1':
                         print("Balance:", balance)
